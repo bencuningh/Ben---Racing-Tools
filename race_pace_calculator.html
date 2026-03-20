@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur d'allure course</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f4f0;
+      --bg-info: #e6f1fb;
+      --text-primary: #1a1a18;
+      --text-secondary: #73726c;
+      --text-info: #185fa5;
+      --border: rgba(0,0,0,0.12);
+      --border-secondary: rgba(0,0,0,0.22);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --accent: #3266ad;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1c;
+        --bg-secondary: #2a2a27;
+        --bg-info: #0c2d50;
+        --text-primary: #f0efe9;
+        --text-secondary: #888780;
+        --text-info: #85b7eb;
+        --border: rgba(255,255,255,0.12);
+        --border-secondary: rgba(255,255,255,0.22);
+        --accent: #5a96d8;
+      }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .pace-hero {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .pace-display {
+      font-size: 36px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .pace-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .slider-wrap {
+      flex: 1;
+      min-width: 180px;
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border-secondary);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--accent);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+      cursor: pointer;
+    }
+    .races-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .race-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 0.9rem 0.75rem;
+      text-align: center;
+      border: 0.5px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      user-select: none;
+    }
+    .race-card.highlight {
+      border: 1.5px solid var(--accent);
+      background: var(--bg);
+    }
+    .race-card:hover {
+      border-color: var(--border-secondary);
+    }
+    .race-name {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .race-time {
+      font-size: 18px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .race-dist {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .race-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0.3;
+      transition: width 0.4s ease;
+    }
+    .race-card.highlight .race-bar {
+      opacity: 0.8;
+    }
+    hr {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin: 1.5rem 0;
+    }
+    .splits-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    .splits-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .split-label {
+      color: var(--text-secondary);
+      width: 72px;
+      flex-shrink: 0;
+    }
+    .split-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .split-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .split-val {
+      font-weight: 500;
+      min-width: 56px;
+      text-align: right;
+    }
+    footer {
+      margin-top: 2.5rem;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Calculateur d'allure</h1>
+      <p>Ajuste ton allure pour voir ton temps sur chaque distance</p>
+    </header>
+    <div class="pace-hero">
+      <div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Allure (min/km)</div>
+        <div class="pace-display" id="paceDisplay">5:30</div>
+        <div class="pace-sub" id="paceSub">= 10.9 km/h</div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-labels"><span>3:00</span><span>8:00</span></div>
+        <input type="range" id="paceSlider" min="180" max="480" value="330" step="5" />
+      </div>
+    </div>
+    <div class="races-grid" id="racesGrid"></div>
+    <hr />
+    <div>
+      <div class="splits-title">Temps par fraction — <span id="splitRaceName">Semi-marathon</span></div>
+      <div id="splitsContainer"></div>
+    </div>
+    <footer>Clique sur une course pour voir ses splits · Glisse le curseur pour changer l'allure</footer>
+  </div>
+  <script>
+    const races = [
+      { key: '5k',    name: '5K',        dist: 5,      splits: [1, 2, 3, 4, 5] },
+      { key: '10k',   name: '10K',       dist: 10,     splits: [2.5, 5, 7.5, 10] },
+      { key: 'half',  name: 'Semi',      dist: 21.098, splits: [5, 10, 15, 21.098] },
+      { key: 'full',  name: 'Marathon',  dist: 42.195, splits: [10, 20, 30, 42.195] },
+      { key: 'ultra', name: 'Ultra 50K', dist: 50,     splits: [10, 20, 30, 40, 50] },
+      { key: '100k',  name: '100K',      dist: 100,    splits: [20, 40, 60, 80, 100] },
+    ];
+    let paceSec = 330;
+    let activeRace = 'half';
+    function fmtTime(totalSec) {
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = Math.round(totalSec % 60);
+      if (h > 0) return h + 'h' + String(m).padStart(2, '0');
+      return m + ':' + String(s).padStart(2, '0');
+    }
+    function fmtPace(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.round(sec % 60);
+      return m + ':' + String(s).padStart(2, '0');
+    }
+    function render() {
+      const kmh = (3600 / paceSec).toFixed(1);
+      document.getElementById('paceDisplay').textContent = fmtPace(paceSec);
+      document.getElementById('paceSub').textContent = '= ' + kmh + ' km/h';
+      const grid = document.getElementById('racesGrid');
+      grid.innerHTML = races.map(r => {
+        const total = r.dist * paceSec;
+        const barPct = Math.min(100, (r.dist / 100) * 100);
+        const hl = r.key === activeRace ? 'highlight' : '';
+        return '<div class="race-card ' + hl + '" onclick="setActive(\'' + r.key + '\')">' +
+          '<div class="race-name">' + r.name + '</div>' +
+          '<div class="race-time">' + fmtTime(total) + '</div>' +
+          '<div class="race-dist">' + (r.dist % 1 === 0 ? r.dist : r.dist.toFixed(r.dist < 43 ? 3 : 0)) + ' km</div>' +
+          '<div class="race-bar" style="width:' + barPct.toFixed(1) + '%"></div>' +
+          '</div>';
+      }).join('');
+      renderSplits();
+    }
+    function renderSplits() {
+      const race = races.find(r => r.key === activeRace);
+      document.getElementById('splitRaceName').textContent =
+        race.name + ' (' + (race.dist % 1 === 0 ? race.dist : race.dist.toFixed(3)) + ' km)';
+      const container = document.getElementById('splitsContainer');
+      container.innerHTML = race.splits.map(km => {
+        const t = km * paceSec;
+        const pct = (km / race.dist) * 100;
+        const label = km % 1 === 0 ? km + ' km' : km.toFixed(3) + ' km';
+        return '<div class="splits-row">' +
+          '<div class="split-label">' + label + '</div>' +
+          '<div class="split-bar-wrap"><div class="split-bar" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+          '<div class="split-val">' + fmtTime(t) + '</div>' +
+          '</div>';
+      }).join('');
+    }
+    function setActive(key) {
+      activeRace = key;
+      render();
+    }
+    document.getElementById('paceSlider').addEventListener('input', function(e) {
+      paceSec = parseInt(e.target.value);
+      render();
+    });
+    render();
+  </script>
+</body>
+</html>
